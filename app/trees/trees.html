@@ -1,0 +1,9 @@
+Preorder Input: <input ng-model="preorder" ng-change="treeUpdate()">
+Inorder Input: <input ng-model="inorder" disabled>
+Postorder Input: <input ng-model="postorder" disabled>
+
+<div class="canvas-tree">
+    <div ng-repeat="node in tree" class="node" style="left: {{node.x}}px; top: {{node.y}}px">
+        {{node.key}}
+    </div>
+</div>
