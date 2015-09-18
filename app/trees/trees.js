@@ -5,13 +5,14 @@ function Node(value) {
   this.parent = null;
   this.left = null;
   this.right = null;
+  this.colored = true; //starts out red
 }
 
-function Tree() {
+function RBTree() {
  this.root = null;
 }
 
-Tree.prototype.insert = function(value) {
+RBTree.prototype.insert = function(value) {
   var found = this.search(value);
   if (found.node) {
     return;
@@ -38,15 +39,111 @@ Tree.prototype.insert = function(value) {
   } else {
     working.right = node;
   }
+  console.log(working);
+  this.fixupRB(node);
 };
 
+RBTree.prototype.fixupRB = function(newNode) {
+  var working = null;
 
+  while (newNode.parent && newNode.parent.colored) {
+    if (newNode.parent == newNode.parent.parent.left) {
+      working = newNode.parent.parent.right;
 
-Tree.prototype.delete = function(value) {
+      if (working && working.colored) { //If uncle is red, grandparent must have been black, flip parent, grand, and uncle
+        newNode.parent.colored = false;
+        working.colored = false;
+        newNode.parent.parent.colored = true;
+        newNode = newNode.parent.parent;
+      } else {
+        if (newNode == newNode.parent.right) {
+          newNode = newNode.parent;
+          this.rotateLeft(newNode);
+        }
+
+        newNode.parent.colored = false;
+        newNode.parent.parent.colored = true;
+        this.rotateRight(newNode.parent.parent);
+      }
+
+    } else {
+      working = newNode.parent.parent.left;
+
+      if (working && working.colored) { //If uncle is red, grandparent must have been black, flip parent, grand, and uncle
+        newNode.parent.colored = false;
+        working.colored = false;
+        newNode.parent.parent.colored = true;
+        newNode = newNode.parent.parent;
+
+      } else {
+        if (newNode == newNode.parent.left) {
+          newNode = newNode.parent;
+          this.rotateRight(newNode);
+        }
+
+        newNode.parent.colored = false;
+        newNode.parent.parent.colored = true;
+        this.rotateLeft(newNode.parent.parent);
+      }
+    }
+  }
+
+  this.root.colored = false;
+};
+
+RBTree.prototype.delete = function(value) {
 
 };
 
-Tree.prototype.search = function(targetValue) {
+RBTree.prototype.rotateLeft = function(node) {
+  var right = node.right;
+
+  // Attach the successor of 'node' directly to it
+  node.right = right.left;
+
+  if (right.left) {
+    right.left.parent = node;
+  }
+
+  right.parent = node.parent;
+
+  if (node.parent == null) {
+    this.root = right;
+  } else if (node == node.parent.left) {
+    node.parent.left = right;
+  } else {
+    node.parent.right = right;
+  }
+
+  right.left = node;
+  node.parent = right;
+};
+
+RBTree.prototype.rotateRight = function(node) {
+  var left = node.left;
+
+  // Attach the successor of 'node' directly to it
+  node.left = left.right;
+
+  if (left.right) {
+    left.right.parent = node;
+  }
+
+  left.parent = node.parent;
+
+  if (node.parent == null) {
+    this.root = left;
+  } else if (node == node.parent.right) {
+    node.parent.right = left;
+  } else {
+    node.parent.left = left;
+  }
+
+  left.right = node;
+  node.parent = left;
+};
+
+RBTree.prototype.search = function(targetValue) {
   var workingNode = this.root;
   var height = 0;
   while (workingNode != null && workingNode.key != targetValue) {
@@ -64,25 +161,27 @@ Tree.prototype.search = function(targetValue) {
   };
 };
 
-Tree.prototype.minimum = function() {
+RBTree.prototype.minimum = function() {
 
 };
 
-Tree.prototype.maximum = function() {
+RBTree.prototype.maximum = function() {
 
 };
 
-Tree.prototype.traverseInOrder = function(processor) {
+RBTree.prototype.traverseInOrder = function(processor) {
   var output = [];
 
   function walk(node) {
+
     if (!node) {
       return;
     }
 
     walk(node.left);
+    console.log(node.key);
     if (processor) {
-      processor(node.key, output.length);
+      processor(node.key, node.colored, output.length);
     }
 
     output.push(node.key);
@@ -94,7 +193,7 @@ Tree.prototype.traverseInOrder = function(processor) {
   return output;
 };
 
-Tree.prototype.traversePostOrder = function() {
+RBTree.prototype.traversePostOrder = function() {
   var output = [];
   function walk(node) {
     if (!node) return;
@@ -125,16 +224,15 @@ angular.module('myApp.trees', ['ngRoute'])
     function recomputeVisually() {
       var visualTree = [],
           spacing = 40; //pixels
-
-      var inorder = tree.traverseInOrder(function(node, index) {
+      console.log(tree.root);
+      var inorder = tree.traverseInOrder(function(node, colored, index) {
         var height = tree.search(node).height,
             visualNode = {
               key: node,
               x: spacing * index,
-              y: spacing * height
+              y: spacing * height,
+              colored: colored
             };
-
-        console.log(node, index, height);
 
         visualTree.push(visualNode);
       });
@@ -147,7 +245,7 @@ angular.module('myApp.trees', ['ngRoute'])
     $scope.treeUpdate = function() {
       var preorder = $scope.preorder.split(' ');
 
-      tree = new Tree();
+      tree = new RBTree();
 
       //rebuild tree entirely
       preorder.forEach(function(value, index) {

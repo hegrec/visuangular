@@ -10,11 +10,26 @@
 .node {
   width: 32px;
   height: 32px;
-  background-color: orangered;
+  background-color: black;
+  color: white;
   border: 1px solid black;
   display: flex;
   align-items: center;
   justify-content: center;
   position: absolute;
+  opacity: 1;
+}
 
+.node.ng-enter {
+  -webkit-transition: 1s;
+  transition: 1s;
+  opacity: 0;
+}
+.node.ng-enter-active {
+  opacity: 1;
+}
+
+.node-colored {
+  background-color: orangered;
+  color: black;
 }
